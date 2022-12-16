@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>reactive</title>
+  </head>
+  <body>
+    <div id="app2"></div>
+    <div id="app3"></div>
+  </body>
+  <script type="module">
+    //建议使用vscode 插件 Live Server 启动
+    import { reactive } from "./js/reactive.js";
+    import { effect } from "./js/effect.js";
+    
+    const obj = reactive({
+      ok: true,
+      text: 'hello word',
+      rand: Math.random()
+    });
+
+    effect(() => {
+      document.querySelector("#app2").innerHTML = obj.ok ? obj.text : 'not';
+      document.querySelector("#app3").innerHTML = obj.rand;
+      console.log('执行副作用函数')
+    });
+    setTimeout(function(){
+      obj.ok = true
+    }, 2000)
+    setTimeout(function(){
+      obj.text = 'hello word2'
+    }, 3000)
+
+  </script>
+</html>
