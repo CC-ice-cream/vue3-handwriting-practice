@@ -1,18 +1,26 @@
 var activeEffect;
+var effectStack = [];
 // 清除依赖函数
 function cleanup(effectFn) {
-    for (var i = 0; i < effectFn.deps.length; i++) {
-        var deps = effectFn.deps[i];
-        deps.delete(effectFn);
+    if (effectFn.deps) {
+        for (var i = 0; i < effectFn.deps.length; i++) {
+            var deps = effectFn.deps[i];
+            deps.delete(effectFn);
+        }
+        effectFn.deps.length = 0;
     }
-    effectFn.deps.length = 0;
 }
 //高阶函数 收集副作用函数
 export var effect = function (fn) {
     var effectFn = function () {
         cleanup(effectFn); //清除副作用函数对应的依赖
-        activeEffect = effectFn; //
+        activeEffect = effectFn; //当调用effect注册副作用函数时，将副作用函数赋值给activeEffect
+        effectStack.push(effectFn);
+        //执行副作用函数，proxy收集依赖
         fn();
+        //当前嵌套的副作用函数执行完毕后，将当前副作用函数弹出，把activeEffect还原为外层作用域
+        effectStack.pop();
+        activeEffect = effectStack[effectStack.length - 1];
     };
     effectFn.deps = [];
     effectFn();
@@ -44,7 +52,8 @@ export var track = function (target, key) {
     //将当前激活的副作用函数收集进set集合中
     deps.add(activeEffect);
     // 当前激活的副作用函数也保留一份依赖集合的引用，用于cleanup清除依赖
-    activeEffect.deps.push(deps);
+    if (activeEffect.deps)
+        activeEffect.deps.push(deps);
 };
 // 派发函数，代理对象对修改时会依次触发此前收集的副作用函数
 export var trigger = function (target, key) {

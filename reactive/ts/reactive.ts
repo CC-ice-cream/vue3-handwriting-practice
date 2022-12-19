@@ -8,6 +8,7 @@ export const reactive = <T extends object>(target:T): object => {
       //Reflect的第三个参数 receiver 它保证传递正确的 this
       let res = Reflect.get(target, key, receiver) as object
       track(target, key)
+      
       if(isObject(res)){
         //深层嵌套代理
         return reactive(res)

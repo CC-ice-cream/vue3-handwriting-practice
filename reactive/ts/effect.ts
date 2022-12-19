@@ -1,22 +1,30 @@
 type ActiveEffect = {
   ():void,
-  deps: any[]
+  deps?: any[]
 }
 let activeEffect:ActiveEffect;
+const effectStack: any[] = []
 // 清除依赖函数
 function cleanup(effectFn:ActiveEffect){
-  for(let i=0;i<effectFn.deps.length;i++){
-    const deps = effectFn.deps[i]
-    deps.delete(effectFn)
+  if(effectFn.deps){
+    for(let i=0;i<effectFn.deps.length;i++){
+      const deps = effectFn.deps[i]
+      deps.delete(effectFn)
+    }
+    effectFn.deps.length = 0
   }
-  effectFn.deps.length = 0
 }
 //高阶函数 收集副作用函数
 export const effect = (fn: Function) => {
   const effectFn = function(){
     cleanup(effectFn) //清除副作用函数对应的依赖
-    activeEffect = effectFn //
+    activeEffect = effectFn //当调用effect注册副作用函数时，将副作用函数赋值给activeEffect
+    effectStack.push(effectFn)
+    //执行副作用函数，proxy收集依赖
     fn()
+    //当前嵌套的副作用函数执行完毕后，将当前副作用函数弹出，把activeEffect还原为外层作用域
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length -1]
   }
   effectFn.deps = [] as any
   effectFn()
@@ -48,7 +56,7 @@ export const track = (target: object, key: string | number | symbol) => {
   //将当前激活的副作用函数收集进set集合中
   deps.add(activeEffect)
   // 当前激活的副作用函数也保留一份依赖集合的引用，用于cleanup清除依赖
-  activeEffect.deps.push(deps)
+  if(activeEffect.deps)activeEffect.deps.push(deps)
 }
 // 派发函数，代理对象对修改时会依次触发此前收集的副作用函数
 export const trigger = (target: object, key: string | number | symbol) => {

@@ -15,23 +15,43 @@
     import { reactive } from "./js/reactive.js";
     import { effect } from "./js/effect.js";
     
-    const obj = reactive({
-      ok: true,
-      text: 'hello word',
-      rand: Math.random()
-    });
+    // const obj = reactive({
+    //   ok: true,
+    //   text: 'hello word',
+    //   rand: Math.random()
+    // });
 
-    effect(() => {
-      document.querySelector("#app2").innerHTML = obj.ok ? obj.text : 'not';
-      document.querySelector("#app3").innerHTML = obj.rand;
-      console.log('执行副作用函数')
-    });
-    setTimeout(function(){
-      obj.ok = true
-    }, 2000)
-    setTimeout(function(){
-      obj.text = 'hello word2'
-    }, 3000)
+    // effect(() => {
+    //   document.querySelector("#app2").innerHTML = obj.ok ? obj.text : 'not';
+    //   document.querySelector("#app3").innerHTML = obj.rand;
+    //   console.log('执行副作用函数')
+    // });
+    // setTimeout(function(){
+    //   obj.ok = true
+    // }, 2000)
+    // setTimeout(function(){
+    //   obj.text = 'hello word2'
+    // }, 3000)
+      const data = {
+        foo: true,
+        bar: true
+      }
+      let dataReactive = reactive(data)
+      let temp1,temp2
+      effect(function effectFn1(){
 
+        console.log("effectFn1 执行");
+        
+        // effect(function effectFn2() {
+        //   console.log("effectFn2 执行");
+        //   temp2 = dataReactive.bar
+        // })
+
+        temp1 = dataReactive.foo
+      })
+      setTimeout(function(){
+        dataReactive.foo = false
+      },1000)
+      
   </script>
 </html>
