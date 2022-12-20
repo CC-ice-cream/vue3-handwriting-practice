@@ -15,22 +15,26 @@ function cleanup(effectFn: ActiveEffect) {
   }
 }
 //高阶函数 收集副作用函数
-export const effect = (fn: Function, options = {}) => {
+export const effect = (fn: Function, options = { lazy: false }) => {
   const effectFn = function () {
     cleanup(effectFn); //清除副作用函数对应的依赖
     activeEffect = effectFn; //当调用effect注册副作用函数时，将副作用函数赋值给activeEffect
     effectStack.push(effectFn);
     //执行副作用函数，proxy收集依赖
-    fn();
+    const result = fn();
     //当前嵌套的副作用函数执行完毕后，将当前副作用函数弹出，把activeEffect还原为外层作用域
     effectStack.pop();
     if (effectStack && effectStack.length !== 0) {
       activeEffect = effectStack[effectStack.length - 1];
     }
+    return result;
   };
   effectFn.options = options;
   effectFn.deps = [] as any;
-  effectFn();
+  if (!options.lazy) {
+    effectFn();
+  }
+  return effectFn;
 };
 //创建一个WeakMap 弱引用，有助于垃圾回收
 /**
@@ -68,16 +72,20 @@ export const trigger = (target: object, key: string | number | symbol) => {
   const effects = depsMap.get(key);
   //为了防止分支的情况需要cleanup先清除一遍依赖再收集，这会导致foreach无限循环所以需要创建一个set包裹调用
   const effectsToRun = new Set(effects);
-  effects && effects.forEach((effectFn: unknown) => {
-    if(effectFn !== activeEffect){
-      effectsToRun.add(effectFn)
-    }
-  })
+  effects &&
+    effects.forEach((effectFn: unknown) => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
   effectsToRun.forEach((effects: any) => {
-    if(effects.options.scheduler && typeof effects.options.scheduler === 'function'){
-      effects.options.scheduler(effects)
-    }else{
-      effects()
+    if (
+      effects.options.scheduler &&
+      typeof effects.options.scheduler === "function"
+    ) {
+      effects.options.scheduler(effects);
+    } else {
+      effects();
     }
   });
 };
