@@ -14,8 +14,12 @@ function cleanup(effectFn: ActiveEffect) {
     effectFn.deps.length = 0;
   }
 }
+type OPTIONS = {
+  lazy?: boolean,
+  scheduler?: () => void
+}
 //高阶函数 收集副作用函数
-export const effect = (fn: Function, options = { lazy: false }) => {
+export const effect = (fn: Function, options:OPTIONS = { lazy: false }) => {
   const effectFn = function () {
     cleanup(effectFn); //清除副作用函数对应的依赖
     activeEffect = effectFn; //当调用effect注册副作用函数时，将副作用函数赋值给activeEffect

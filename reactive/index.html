@@ -14,6 +14,7 @@
     //建议使用vscode 插件 Live Server 启动
     import { reactive } from "./js/reactive.js";
     import { effect } from "./js/effect.js";
+    import { watch } from "./js/watch.js";
     // effect(function(){
     //   //副作用函数
     //   ...
@@ -25,23 +26,34 @@
     //     fn()
     //   },0)
     // }})
+    // const data = {
+    //   foo: true,
+    //   bar: true,
+    // };
+    // let dataReactive = reactive(data);
+    // let temp1, temp2;
+    // effect(
+    //   function effectFn1() {
+    //     temp1 = dataReactive.foo;
+    //   },
+    //   {
+    //     scheduler(fn) {
+    //       console.log("scheduler");
+    //       fn();
+    //     },
+    //   }
+    // );
+    // dataReactive.foo = false;
     const data = {
-      foo: true,
-      bar: true,
+      foo: 1,
+      bar: 2,
     };
     let dataReactive = reactive(data);
-    let temp1, temp2;
-    effect(
-      function effectFn1() {
-        temp1 = dataReactive.foo;
-      },
-      {
-        scheduler(fn) {
-          console.log("scheduler");
-          fn();
-        },
-      }
-    );
-    dataReactive.foo = false;
+    watch(function(){
+      return dataReactive.foo + dataReactive.bar
+    },function(newval, oldval){
+      console.log('watch', newval, oldval)
+    })
+    dataReactive.foo = 3;
   </script>
 </html>
